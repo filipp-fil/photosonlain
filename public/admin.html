@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Статистика посещений</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #222;
+      background: #f7f7f7;
+      font-size: 0.85rem;
+    }
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    header h1 { font-size: 1rem; font-weight: 600; }
+    header button, header a.btn {
+      font: inherit;
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      color: #333;
+    }
+    header button:hover, header a.btn:hover { background: #f0f0f0; }
+    .wrap { padding: 16px 20px; overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      white-space: nowrap;
+    }
+    th, td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #fafafa;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    tr:hover td { background: #fbfbfb; }
+    .empty { color: #999; padding: 24px; text-align: center; }
+    .count { color: #888; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Статистика посещений <span class="count" id="count"></span></h1>
+    <div>
+      <button id="refresh">Обновить</button>
+      <button id="clear">Очистить</button>
+      <a class="btn" href="/api/visits" target="_blank">JSON</a>
+    </div>
+  </header>
+  <div class="wrap">
+    <table id="table" hidden>
+      <thead>
+        <tr>
+          <th>Время</th>
+          <th>IP</th>
+          <th>Страна</th>
+          <th>Город</th>
+          <th>Провайдер</th>
+          <th>Устройство</th>
+          <th>ОС</th>
+          <th>Браузер</th>
+          <th>Язык</th>
+          <th>Экран</th>
+          <th>Часовой пояс</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty">Пока нет визитов. Зайдите на главную страницу.</div>
+  </div>
+
+  <script>
+    var rowsEl = document.getElementById('rows');
+    var tableEl = document.getElementById('table');
+    var emptyEl = document.getElementById('empty');
+    var countEl = document.getElementById('count');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function load() {
+      fetch('/api/visits')
+        .then(function (r) { return r.json(); })
+        .then(function (visits) {
+          countEl.textContent = '(' + visits.length + ')';
+          rowsEl.innerHTML = visits.map(function (v) {
+            return '<tr>' +
+              '<td>' + esc(v.time) + '</td>' +
+              '<td>' + esc(v.ip) + '</td>' +
+              '<td>' + esc(v.country) + '</td>' +
+              '<td>' + esc(v.city) + '</td>' +
+              '<td>' + esc(v.isp) + '</td>' +
+              '<td>' + esc(v.device) + '</td>' +
+              '<td>' + esc(v.os) + '</td>' +
+              '<td>' + esc(v.browser) + '</td>' +
+              '<td>' + esc(v.acceptLanguage) + '</td>' +
+              '<td>' + esc(v.screen) + '</td>' +
+              '<td>' + esc(v.timezone) + '</td>' +
+            '</tr>';
+          }).join('');
+          var has = visits.length > 0;
+          tableEl.hidden = !has;
+          emptyEl.style.display = has ? 'none' : '';
+        })
+        .catch(function () { /* server unreachable — keep last data */ });
+    }
+
+    document.getElementById('refresh').addEventListener('click', load);
+    document.getElementById('clear').addEventListener('click', function () {
+      fetch('/api/visits', { method: 'DELETE' }).then(load);
+    });
+    load();
+    setInterval(load, 10000); // auto-refresh every 10 s
+  </script>
+</body>
+</html>

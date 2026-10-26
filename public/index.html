@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Фотоблог — просто фотографии</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #222;
+      background: #fff;
+      line-height: 1.7;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 20px 32px;
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    p { margin-bottom: 16px; color: #444; }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 28px 0;
+    }
+    .gallery img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 6px;
+      display: block;
+    }
+    footer {
+      margin-top: 48px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      font-size: 0.8rem;
+      color: #999;
+      text-align: center;
+    }
+    @media (max-width: 560px) {
+      .container { padding-top: 32px; }
+      h1 { font-size: 1.4rem; }
+      .gallery { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Просто фотографии</h1>
+    <p>
+      Это маленькая страница с несколькими случайными фотографиями.
+      Ничего особенного — просто картинки и немного текста.
+    </p>
+    <p>
+      Иногда хочется собрать несколько снимков в одном месте, не заводя
+      отдельный профиль в соцсетях. Эта страница и сделана для этого.
+    </p>
+
+    <div class="gallery">
+      <img src="/img/photo1.jpg" alt="Фотография 1">
+      <img src="/img/photo2.jpg" alt="Фотография 2">
+      <img src="/img/photo3.jpg" alt="Фотография 3">
+    </div>
+
+    <p>
+      Новые фото будут появляться по мере съёмки. Если вам нравится то,
+      что вы видите, — заглядывайте ещё.
+    </p>
+
+    <footer>
+      Этот сайт собирает анонимную статистику посещений.
+    </footer>
+  </main>
+
+  <script>
+    // Anonymous visit statistics (does not affect page load)
+    (function () {
+      var payload = {
+        client: {
+          screen: window.screen ? window.screen.width + 'x' + window.screen.height : '',
+          timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone) || '',
+          language: navigator.language || ''
+        }
+      };
+      try {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/visit', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+        } else {
+          fetch('/api/visit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            keepalive: true
+          }).catch(function () {});
+        }
+      } catch (e) { /* never break the page */ }
+    })();
+  </script>
+</body>
+</html>
