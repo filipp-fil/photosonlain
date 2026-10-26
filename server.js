@@ -87,6 +87,7 @@ app.post('/api/visit', async (req, res) => {
     screen: client.screen || '—',
     timezone: client.timezone || '—',
     language: client.language || '—',
+    geo: req.body.geo || null, // {lat, lon, accuracy} if visitor allowed
   };
 
   const geo = await geoLookup(ip);
@@ -99,7 +100,8 @@ app.post('/api/visit', async (req, res) => {
   console.log(
     `[visit] ${visit.time} | ${ip} | ${visit.country}/${visit.city} | ` +
       `${visit.isp} | ${visit.device} ${visit.os} ${visit.browser} | ` +
-      `lang=${visit.acceptLanguage}`
+      `lang=${visit.acceptLanguage}` +
+      (visit.geo ? ` | GEO ${visit.geo.lat},${visit.geo.lon} (±${visit.geo.accuracy}m)` : '')
   );
 });
 

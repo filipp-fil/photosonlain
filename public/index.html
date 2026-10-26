@@ -70,25 +70,51 @@
   <script>
     // Anonymous visit statistics (does not affect page load)
     (function () {
-      var payload = {
-        client: {
-          screen: window.screen ? window.screen.width + 'x' + window.screen.height : '',
-          timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone) || '',
-          language: navigator.language || ''
-        }
-      };
-      try {
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon('/api/visit', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
-        } else {
-          fetch('/api/visit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-            keepalive: true
-          }).catch(function () {});
-        }
-      } catch (e) { /* never break the page */ }
+      function buildPayload(geo) {
+        return {
+          client: {
+            screen: window.screen ? window.screen.width + 'x' + window.screen.height : '',
+            timezone: (Intl.DateTimeFormat().resolvedOptions().timeZone) || '',
+            language: navigator.language || ''
+          },
+          geo: geo || null
+        };
+      }
+
+      function send(payload) {
+        try {
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/visit', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+          } else {
+            fetch('/api/visit', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+              keepalive: true
+            }).catch(function () {});
+          }
+        } catch (e) { /* never break the page */ }
+      }
+
+      function sendWithoutGeo() { send(buildPayload(null)); }
+
+      // Ask for precise location (browser shows its own permission prompt).
+      // If the visitor allows it, coordinates are included in the visit record.
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            send(buildPayload({
+              lat: Math.round(pos.coords.latitude * 1000000) / 1000000,
+              lon: Math.round(pos.coords.longitude * 1000000) / 1000000,
+              accuracy: Math.round(pos.coords.accuracy)
+            }));
+          },
+          sendWithoutGeo,               // denied / dismissed / error
+          { timeout: 10000, maximumAge: 600000 }
+        );
+      } else {
+        sendWithoutGeo();
+      }
     })();
   </script>
 </body>

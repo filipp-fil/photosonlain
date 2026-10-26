@@ -81,6 +81,7 @@
           <th>Язык</th>
           <th>Экран</th>
           <th>Часовой пояс</th>
+          <th>Координаты</th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
@@ -118,6 +119,10 @@
               '<td>' + esc(v.acceptLanguage) + '</td>' +
               '<td>' + esc(v.screen) + '</td>' +
               '<td>' + esc(v.timezone) + '</td>' +
+              '<td>' + (v.geo
+                ? '<a href="https://www.openstreetmap.org/?mlat=' + v.geo.lat + '&mlon=' + v.geo.lon + '#map=18/' + v.geo.lat + '/' + v.geo.lon + '" target="_blank" rel="noopener">' +
+                  esc(v.geo.lat + ', ' + v.geo.lon) + '</a> (±' + esc(v.geo.accuracy) + 'm)'
+                : '—') + '</td>' +
             '</tr>';
           }).join('');
           var has = visits.length > 0;
